@@ -14,7 +14,164 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      ai_recommendations: {
+        Row: {
+          confidence_score: number | null
+          created_at: string
+          description: string | null
+          id: string
+          match_id: string | null
+          reasoning: string | null
+          recommendation_type: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_id?: string | null
+          reasoning?: string | null
+          recommendation_type: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          match_id?: string | null
+          reasoning?: string | null
+          recommendation_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_recommendations_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "match_analytics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_analytics: {
+        Row: {
+          away_cards: number | null
+          away_corners: number | null
+          away_goals: number | null
+          away_team: string
+          away_win_probability: number | null
+          created_at: string
+          draw_probability: number | null
+          home_cards: number | null
+          home_corners: number | null
+          home_goals: number | null
+          home_team: string
+          home_win_probability: number | null
+          id: string
+          match_date: string
+        }
+        Insert: {
+          away_cards?: number | null
+          away_corners?: number | null
+          away_goals?: number | null
+          away_team: string
+          away_win_probability?: number | null
+          created_at?: string
+          draw_probability?: number | null
+          home_cards?: number | null
+          home_corners?: number | null
+          home_goals?: number | null
+          home_team: string
+          home_win_probability?: number | null
+          id?: string
+          match_date: string
+        }
+        Update: {
+          away_cards?: number | null
+          away_corners?: number | null
+          away_goals?: number | null
+          away_team?: string
+          away_win_probability?: number | null
+          created_at?: string
+          draw_probability?: number | null
+          home_cards?: number | null
+          home_corners?: number | null
+          home_goals?: number | null
+          home_team?: string
+          home_win_probability?: number | null
+          id?: string
+          match_date?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          plan_type: string
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type: string
+          status: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          plan_type?: string
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
