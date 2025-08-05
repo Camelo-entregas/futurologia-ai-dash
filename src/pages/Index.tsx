@@ -4,52 +4,83 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Activity, Users, Target, Crown } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, Users, Target, Crown, Loader2 } from "lucide-react";
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { MatchAnalytics } from "@/components/MatchAnalytics";
 import { PricingPlans } from "@/components/PricingPlans";
 import { MatchSelector } from "@/components/MatchSelector";
+import { MatchPrediction } from "@/components/MatchPrediction";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [selectedMatch, setSelectedMatch] = useState<{league: string, team: string} | null>(null);
+  const [selectedMatch, setSelectedMatch] = useState<{league: string, homeTeam: string, awayTeam: string} | null>(null);
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   // Mock data for demonstration
   const matchData = {
-    homeTeam: selectedMatch?.team || "Flamengo",
-    awayTeam: "Palmeiras",
-    homeWinProb: 48,
-    drawProb: 28,
-    awayWinProb: 24,
-    confidence: 82
+    homeTeam: selectedMatch?.homeTeam || "Flamengo",
+    awayTeam: selectedMatch?.awayTeam || "Palmeiras",
+    homeWinProb: analysis?.prediction?.homeWinProb || 48,
+    drawProb: analysis?.prediction?.drawProb || 28,
+    awayWinProb: analysis?.prediction?.awayWinProb || 24,
+    confidence: analysis?.prediction?.confidence || 82
   };
 
   const recommendations = [
     {
-      type: "Ambos marcam (SIM)",
-      confidence: 82,
-      reason: "Últimos 10 jogos entre as equipes",
+      type: analysis?.prediction?.winner ? `${analysis.prediction.winner} vence` : "Ambos marcam (SIM)",
+      confidence: analysis?.prediction?.confidence || 82,
+      reason: analysis?.prediction?.reasons?.[0] || "Baseado em estatísticas recentes",
       odds: "1.75"
     },
     {
       type: "Over 2.5 gols",
       confidence: 78,
-      reason: "Média de 3.2 gols nos últimos confrontos",
+      reason: "Média de gols das equipes indica jogo movimentado",
       odds: "1.65"
     },
     {
-      type: `${selectedMatch?.team || "Flamengo"} vence 1º tempo`,
+      type: `${selectedMatch?.homeTeam || "Flamengo"} vence 1º tempo`,
       confidence: 65,
-      reason: "85% de aproveitamento em casa",
+      reason: "Vantagem do mandante no início da partida",
       odds: "2.10"
     }
   ];
 
-  const handleAnalyze = (league: string, team: string) => {
-    setSelectedMatch({ league, team });
-    console.log(`Analisando: ${league} - ${team}`);
-    // Here you would call your analysis function
-    // gerarAnalise(league, team);
+  const handleAnalyze = async (league: string, homeTeam: string, awayTeam: string) => {
+    setSelectedMatch({ league, homeTeam, awayTeam });
+    setIsLoading(true);
+    
+    try {
+      console.log(`Analisando: ${league} - ${homeTeam} vs ${awayTeam}`);
+      
+      const { data, error } = await supabase.functions.invoke('match-analysis', {
+        body: { league, homeTeam, awayTeam }
+      });
+
+      if (error) throw error;
+
+      setAnalysis(data);
+      
+      toast({
+        title: "Análise Concluída!",
+        description: `${data.prediction.winner} tem ${data.prediction.confidence}% de chance de vitória`,
+      });
+
+    } catch (error) {
+      console.error('Erro na análise:', error);
+      toast({
+        title: "Erro na Análise",
+        description: "Não foi possível analisar a partida. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -125,7 +156,14 @@ const Index = () => {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <ProbabilityChart data={matchData} />
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <span className="ml-2 text-muted-foreground">Analisando...</span>
+                    </div>
+                  ) : (
+                    <ProbabilityChart data={matchData} />
+                  )}
                 </CardContent>
               </Card>
 
@@ -158,6 +196,13 @@ const Index = () => {
                 </CardContent>
               </Card>
             </section>
+
+            {/* Prediction Results */}
+            {analysis && (
+              <section>
+                <MatchPrediction analysis={analysis} />
+              </section>
+            )}
 
             {/* Stats Cards */}
             <section className="grid md:grid-cols-3 gap-6">
