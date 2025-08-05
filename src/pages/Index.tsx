@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,13 +8,15 @@ import { TrendingUp, TrendingDown, Activity, Users, Target, Crown } from "lucide
 import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { MatchAnalytics } from "@/components/MatchAnalytics";
 import { PricingPlans } from "@/components/PricingPlans";
+import { MatchSelector } from "@/components/MatchSelector";
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [selectedMatch, setSelectedMatch] = useState<{league: string, team: string} | null>(null);
 
   // Mock data for demonstration
   const matchData = {
-    homeTeam: "Flamengo",
+    homeTeam: selectedMatch?.team || "Flamengo",
     awayTeam: "Palmeiras",
     homeWinProb: 48,
     drawProb: 28,
@@ -35,12 +38,19 @@ const Index = () => {
       odds: "1.65"
     },
     {
-      type: "Flamengo vence 1º tempo",
+      type: `${selectedMatch?.team || "Flamengo"} vence 1º tempo`,
       confidence: 65,
       reason: "85% de aproveitamento em casa",
       odds: "2.10"
     }
   ];
+
+  const handleAnalyze = (league: string, team: string) => {
+    setSelectedMatch({ league, team });
+    console.log(`Analisando: ${league} - ${team}`);
+    // Here you would call your analysis function
+    // gerarAnalise(league, team);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -94,8 +104,11 @@ const Index = () => {
               </p>
             </section>
 
-            {/* Match Analysis Section */}
-            <section className="grid lg:grid-cols-2 gap-8">
+            {/* Match Selector */}
+            <section className="grid lg:grid-cols-3 gap-8">
+              <MatchSelector onAnalyze={handleAnalyze} />
+
+              {/* Match Analysis Section */}
               <Card className="bg-card/80 backdrop-blur-sm border-border">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2">
@@ -104,6 +117,11 @@ const Index = () => {
                   </CardTitle>
                   <CardDescription>
                     {matchData.homeTeam} vs {matchData.awayTeam}
+                    {selectedMatch && (
+                      <span className="block text-primary text-sm mt-1">
+                        {selectedMatch.league}
+                      </span>
+                    )}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
