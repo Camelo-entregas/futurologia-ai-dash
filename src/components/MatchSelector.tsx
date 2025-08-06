@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Activity, Target, Home, Plane } from "lucide-react";
 
 const leagues = {
-  "Brasileirão Série A": ["Flamengo", "Palmeiras", "São Paulo", "Corinthians", "Atlético-MG", "Internacional"],
+  "Brasileirão Série A": ["Flamengo", "Palmeiras", "São Paulo", "Corinthians", "Atlético-MG", "Internacional", "Grêmio", "Santos", "Vasco", "Cruzeiro", "Botafogo", "Fluminense", "Athletico-PR", "Fortaleza", "Bragantino", "Goiás", "Coritiba", "América-MG", "Cuiabá", "Bahia"],
+  "Brasileirão Série B": ["Sport", "Santos", "Novorizontino", "Vila Nova", "Ceará", "Goiás", "América-MG", "Coritiba", "Avaí", "Operário-PR", "Ponta Grossa", "Chapecoense", "Botafogo-SP", "Mirassol", "CRB", "Tombense", "Londrina", "Sampaio Corrêa", "Ituano", "Guarani"],
   "Premier League": ["Arsenal", "Man City", "Liverpool", "Chelsea", "Man United", "Tottenham"],
   "La Liga": ["Real Madrid", "Barcelona", "Atlético Madrid", "Sevilla", "Valencia", "Real Sociedad"],
   "Serie A": ["Juventus", "Inter", "AC Milan", "Napoli", "Roma", "Lazio"]
