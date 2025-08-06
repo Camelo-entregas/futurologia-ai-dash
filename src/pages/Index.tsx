@@ -9,7 +9,8 @@ import { ProbabilityChart } from "@/components/ProbabilityChart";
 import { MatchAnalytics } from "@/components/MatchAnalytics";
 import { PricingPlans } from "@/components/PricingPlans";
 import { MatchSelector } from "@/components/MatchSelector";
-import { MatchPrediction } from "@/components/MatchPrediction";
+import { BettingRecommendation } from "@/components/BettingRecommendation";
+import { DetailedStats } from "@/components/DetailedStats";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -24,17 +25,17 @@ const Index = () => {
   const matchData = {
     homeTeam: selectedMatch?.homeTeam || "Flamengo",
     awayTeam: selectedMatch?.awayTeam || "Palmeiras",
-    homeWinProb: analysis?.prediction?.homeWinProb || 48,
-    drawProb: analysis?.prediction?.drawProb || 28,
-    awayWinProb: analysis?.prediction?.awayWinProb || 24,
-    confidence: analysis?.prediction?.confidence || 82
+    homeWinProb: analysis?.recommendation?.homeWinProb || 48,
+    drawProb: analysis?.recommendation?.drawProb || 28,
+    awayWinProb: analysis?.recommendation?.awayWinProb || 24,
+    confidence: analysis?.recommendation?.confidence || 82
   };
 
   const recommendations = [
     {
-      type: analysis?.prediction?.winner ? `${analysis.prediction.winner} vence` : "Ambos marcam (SIM)",
-      confidence: analysis?.prediction?.confidence || 82,
-      reason: analysis?.prediction?.reasons?.[0] || "Baseado em estatísticas recentes",
+      type: analysis?.recommendation?.winner ? `${analysis.recommendation.winner} vence` : "Ambos marcam (SIM)",
+      confidence: analysis?.recommendation?.confidence || 82,
+      reason: analysis?.recommendation?.reasons?.[0] || "Baseado em estatísticas recentes",
       odds: "1.75"
     },
     {
@@ -68,7 +69,7 @@ const Index = () => {
       
       toast({
         title: "Análise Concluída!",
-        description: `${data.prediction.winner} tem ${data.prediction.confidence}% de chance de vitória`,
+        description: `${data.recommendation.winner} tem ${data.recommendation.confidence}% de chance de vitória`,
       });
 
     } catch (error) {
@@ -135,6 +136,13 @@ const Index = () => {
               </p>
             </section>
 
+            {/* Betting Recommendation - TOP OF PAGE */}
+            {analysis && (
+              <section>
+                <BettingRecommendation recommendation={analysis.recommendation} />
+              </section>
+            )}
+
             {/* Match Selector */}
             <section className="grid lg:grid-cols-3 gap-8">
               <MatchSelector onAnalyze={handleAnalyze} />
@@ -197,10 +205,14 @@ const Index = () => {
               </Card>
             </section>
 
-            {/* Prediction Results */}
+            {/* Detailed Statistics */}
             {analysis && (
               <section>
-                <MatchPrediction analysis={analysis} />
+                <DetailedStats 
+                  homeTeam={analysis.homeTeam}
+                  awayTeam={analysis.awayTeam}
+                  headToHead={analysis.headToHead}
+                />
               </section>
             )}
 
@@ -249,7 +261,6 @@ const Index = () => {
               </Card>
             </section>
 
-            {/* CTA Section */}
             <section className="text-center bg-card/50 backdrop-blur-sm rounded-lg p-8 border border-border">
               <h3 className="text-2xl font-bold text-foreground mb-4">
                 Pronto para começar?

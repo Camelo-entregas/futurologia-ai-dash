@@ -19,20 +19,22 @@ serve(async (req) => {
       throw new Error('Football API key not configured');
     }
 
-    const baseUrl = 'https://v3.football.api-sports.io';
+    const baseUrl = 'https://apiv3.apifootball.com';
     let url = `${baseUrl}${endpoint}`;
     
     if (params) {
       const searchParams = new URLSearchParams(params);
+      searchParams.append('APIkey', footballApiKey);
       url += `?${searchParams.toString()}`;
+    } else {
+      url += `?APIkey=${footballApiKey}`;
     }
 
     console.log('Calling Football API:', url);
 
     const response = await fetch(url, {
       headers: {
-        'X-RapidAPI-Key': footballApiKey,
-        'X-RapidAPI-Host': 'v3.football.api-sports.io'
+        'Content-Type': 'application/json'
       }
     });
 
