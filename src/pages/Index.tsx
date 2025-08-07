@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -28,7 +27,9 @@ const Index = () => {
     homeWinProb: analysis?.recommendation?.homeWinProb || 48,
     drawProb: analysis?.recommendation?.drawProb || 28,
     awayWinProb: analysis?.recommendation?.awayWinProb || 24,
-    confidence: analysis?.recommendation?.confidence || 82
+    confidence: analysis?.recommendation?.confidence || 82,
+    homePosition: analysis?.homeTeam?.position,
+    awayPosition: analysis?.awayTeam?.position
   };
 
   const recommendations = [
