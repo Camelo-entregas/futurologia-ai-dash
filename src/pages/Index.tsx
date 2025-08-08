@@ -141,6 +141,30 @@ const Index = () => {
           </CardContent>
         </Card>
 
+        {/* Betting Recommendations - Now at the top */}
+        {matchData && (
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <Target className="h-5 w-5 text-primary" />
+                Recomendações de Apostas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <BettingRecommendation 
+                recommendation={{
+                  winner: matchData.predictions.homeWin > matchData.predictions.awayWin ? matchData.homeTeam.name : matchData.awayTeam.name,
+                  confidence: Math.max(matchData.predictions.homeWin, matchData.predictions.awayWin),
+                  betRecommendation: "Aposta recomendada: Vitória simples",
+                  homeWinProb: matchData.predictions.homeWin,
+                  drawProb: matchData.predictions.draw,
+                  awayWinProb: matchData.predictions.awayWin
+                }}
+              />
+            </CardContent>
+          </Card>
+        )}
+
         {/* Results Section - Mobile responsive grid */}
         {matchData && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -246,28 +270,6 @@ const Index = () => {
                       homeWins: 3,
                       awayWins: 1,
                       draws: 1
-                    }}
-                  />
-                </CardContent>
-              </Card>
-
-              {/* Betting Recommendations */}
-              <Card>
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                    <Target className="h-5 w-5 text-primary" />
-                    Recomendações de Apostas
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <BettingRecommendation 
-                    recommendation={{
-                      winner: matchData.predictions.homeWin > matchData.predictions.awayWin ? matchData.homeTeam.name : matchData.awayTeam.name,
-                      confidence: Math.max(matchData.predictions.homeWin, matchData.predictions.awayWin),
-                      betRecommendation: "Aposta recomendada: Vitória simples",
-                      homeWinProb: matchData.predictions.homeWin,
-                      drawProb: matchData.predictions.draw,
-                      awayWinProb: matchData.predictions.awayWin
                     }}
                   />
                 </CardContent>
