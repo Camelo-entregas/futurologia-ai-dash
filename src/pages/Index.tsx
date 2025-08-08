@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import MatchSelector from "@/components/MatchSelector";
-import MatchPrediction from "@/components/MatchPrediction";
+import { MatchPrediction } from "@/components/MatchPrediction";
 import ProbabilityChart from "@/components/ProbabilityChart";
-import DetailedStats from "@/components/DetailedStats";
-import BettingRecommendation from "@/components/BettingRecommendation";
-import MatchAnalytics from "@/components/MatchAnalytics";
-import PricingPlans from "@/components/PricingPlans";
+import { DetailedStats } from "@/components/DetailedStats";
+import { BettingRecommendation } from "@/components/BettingRecommendation";
+import { MatchAnalytics } from "@/components/MatchAnalytics";
+import { PricingPlans } from "@/components/PricingPlans";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Activity, TrendingUp, Target, BarChart3 } from "lucide-react";
 
