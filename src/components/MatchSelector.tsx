@@ -1,75 +1,90 @@
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Activity, Target, Home, Plane } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Smartphone, Monitor } from "lucide-react";
 
-const leagues = {
-  "Brasileirão Série A": ["Flamengo", "Palmeiras", "São Paulo", "Corinthians", "Atlético-MG", "Internacional", "Grêmio", "Santos", "Vasco", "Cruzeiro", "Botafogo", "Fluminense", "Athletico-PR", "Fortaleza", "Bragantino", "Goiás", "Coritiba", "América-MG", "Cuiabá", "Bahia"],
-  "Brasileirão Série B": ["Sport", "Santos", "Novorizontino", "Vila Nova", "Ceará", "Goiás", "América-MG", "Coritiba", "Avaí", "Operário-PR", "Ponta Grossa", "Chapecoense", "Botafogo-SP", "Mirassol", "CRB", "Tombense", "Londrina", "Sampaio Corrêa", "Ituano", "Guarani"],
-  "Premier League": ["Arsenal", "Man City", "Liverpool", "Chelsea", "Man United", "Tottenham"],
-  "La Liga": ["Real Madrid", "Barcelona", "Atlético Madrid", "Sevilla", "Valencia", "Real Sociedad"],
-  "Serie A": ["Juventus", "Inter", "AC Milan", "Napoli", "Roma", "Lazio"]
+const leagues = [
+  "Brasileirão Série A",
+  "Brasileirão Série B",
+  "Copa Libertadores",
+  "Copa Sul-Americana",
+  "Copa do Brasil",
+  "Campeonato Paulista",
+  "Campeonato Carioca",
+  "Premier League",
+  "La Liga",
+  "Serie A",
+  "Bundesliga",
+  "Ligue 1"
+];
+
+const teams = {
+  "Brasileirão Série A": [
+    "Flamengo", "Palmeiras", "Corinthians", "São Paulo", "Santos", "Grêmio",
+    "Internacional", "Atlético-MG", "Cruzeiro", "Botafogo", "Vasco da Gama",
+    "Fluminense", "Athletico-PR", "Coritiba", "Bahia", "Goiás", "Ceará",
+    "Fortaleza", "Bragantino", "Cuiabá"
+  ],
+  "Premier League": [
+    "Manchester City", "Arsenal", "Manchester United", "Liverpool", "Chelsea",
+    "Newcastle", "Brighton", "Aston Villa", "Tottenham", "West Ham"
+  ]
 };
 
 interface MatchSelectorProps {
-  onAnalyze: (league: string, homeTeam: string, awayTeam: string) => void;
+  onAnalyze: (homeTeam: string, awayTeam: string, league: string) => void;
 }
 
-export function MatchSelector({ onAnalyze }: MatchSelectorProps) {
+const MatchSelector = ({ onAnalyze }: MatchSelectorProps) => {
   const [selectedLeague, setSelectedLeague] = useState<string>("");
   const [homeTeam, setHomeTeam] = useState<string>("");
   const [awayTeam, setAwayTeam] = useState<string>("");
-  const [availableTeams, setAvailableTeams] = useState<string[]>([]);
 
-  const handleLeagueChange = (league: string) => {
-    setSelectedLeague(league);
-    setAvailableTeams(leagues[league as keyof typeof leagues] || []);
-    setHomeTeam("");
-    setAwayTeam("");
-  };
+  const availableTeams = selectedLeague ? teams[selectedLeague as keyof typeof teams] || [] : [];
 
   const handleAnalyze = () => {
-    if (selectedLeague && homeTeam && awayTeam && homeTeam !== awayTeam) {
-      onAnalyze(selectedLeague, homeTeam, awayTeam);
+    if (homeTeam && awayTeam && selectedLeague) {
+      onAnalyze(homeTeam, awayTeam, selectedLeague);
     }
   };
 
-  const canAnalyze = selectedLeague && homeTeam && awayTeam && homeTeam !== awayTeam;
-
   return (
-    <Card className="bg-card/80 backdrop-blur-sm border-border">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <Target className="h-5 w-5 text-primary" />
-          <span>Seleção de Partida</span>
-        </CardTitle>
-        <CardDescription>
-          Escolha o campeonato, time da casa e visitante para análise
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">Campeonato</label>
-          <Select value={selectedLeague} onValueChange={handleLeagueChange}>
-            <SelectTrigger className="bg-background border-border">
-              <SelectValue placeholder="Selecione o campeonato" />
-            </SelectTrigger>
-            <SelectContent className="bg-background border-border z-50">
-              {Object.keys(leagues).map((league) => (
-                <SelectItem key={league} value={league} className="hover:bg-accent">
-                  {league}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <Card className="w-full">
+      <CardContent className="p-4 sm:p-6">
+        {/* Device compatibility indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6 p-3 bg-primary/10 rounded-lg">
+          <Monitor className="h-4 w-4 text-primary" />
+          <Smartphone className="h-4 w-4 text-primary" />
+          <span className="text-sm font-medium text-primary">
+            Compatível com Desktop e Mobile
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+          {/* League Selection */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Home className="h-4 w-4 text-primary" />
+            <label className="text-sm font-medium text-foreground">
+              Competição
+            </label>
+            <Select value={selectedLeague} onValueChange={setSelectedLeague}>
+              <SelectTrigger className="w-full h-12">
+                <SelectValue placeholder="Selecionar competição" />
+              </SelectTrigger>
+              <SelectContent className="max-h-[200px]">
+                {leagues.map((league) => (
+                  <SelectItem key={league} value={league} className="text-sm">
+                    {league}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Home Team */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">
               Time da Casa
             </label>
             <Select 
@@ -77,17 +92,12 @@ export function MatchSelector({ onAnalyze }: MatchSelectorProps) {
               onValueChange={setHomeTeam}
               disabled={!selectedLeague}
             >
-              <SelectTrigger className="bg-background border-border">
-                <SelectValue placeholder="Time mandante" />
+              <SelectTrigger className="w-full h-12">
+                <SelectValue placeholder="Time da casa" />
               </SelectTrigger>
-              <SelectContent className="bg-background border-border z-50">
+              <SelectContent className="max-h-[200px]">
                 {availableTeams.map((team) => (
-                  <SelectItem 
-                    key={team} 
-                    value={team} 
-                    className="hover:bg-accent"
-                    disabled={team === awayTeam}
-                  >
+                  <SelectItem key={team} value={team} className="text-sm">
                     {team}
                   </SelectItem>
                 ))}
@@ -95,9 +105,9 @@ export function MatchSelector({ onAnalyze }: MatchSelectorProps) {
             </Select>
           </div>
 
+          {/* Away Team */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground flex items-center gap-2">
-              <Plane className="h-4 w-4 text-muted-foreground" />
+            <label className="text-sm font-medium text-foreground">
               Time Visitante
             </label>
             <Select 
@@ -105,40 +115,36 @@ export function MatchSelector({ onAnalyze }: MatchSelectorProps) {
               onValueChange={setAwayTeam}
               disabled={!selectedLeague}
             >
-              <SelectTrigger className="bg-background border-border">
+              <SelectTrigger className="w-full h-12">
                 <SelectValue placeholder="Time visitante" />
               </SelectTrigger>
-              <SelectContent className="bg-background border-border z-50">
-                {availableTeams.map((team) => (
-                  <SelectItem 
-                    key={team} 
-                    value={team} 
-                    className="hover:bg-accent"
-                    disabled={team === homeTeam}
-                  >
-                    {team}
-                  </SelectItem>
-                ))}
+              <SelectContent className="max-h-[200px]">
+                {availableTeams
+                  .filter(team => team !== homeTeam)
+                  .map((team) => (
+                    <SelectItem key={team} value={team} className="text-sm">
+                      {team}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
         </div>
 
-        {homeTeam && awayTeam && homeTeam === awayTeam && (
-          <p className="text-sm text-destructive">
-            Os times da casa e visitante devem ser diferentes
-          </p>
-        )}
-
-        <Button 
-          onClick={handleAnalyze}
-          disabled={!canAnalyze}
-          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-        >
-          <Activity className="h-4 w-4 mr-2" />
-          Analisar Partida
-        </Button>
+        {/* Analyze Button */}
+        <div className="flex justify-center">
+          <Button 
+            onClick={handleAnalyze}
+            disabled={!homeTeam || !awayTeam || !selectedLeague}
+            className="w-full sm:w-auto px-8 py-3 text-base font-medium"
+            size="lg"
+          >
+            Analisar Partida
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
-}
+};
+
+export default MatchSelector;

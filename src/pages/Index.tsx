@@ -1,284 +1,237 @@
+
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { TrendingUp, TrendingDown, Activity, Users, Target, Crown, Loader2 } from "lucide-react";
-import { ProbabilityChart } from "@/components/ProbabilityChart";
-import { MatchAnalytics } from "@/components/MatchAnalytics";
-import { PricingPlans } from "@/components/PricingPlans";
-import { MatchSelector } from "@/components/MatchSelector";
-import { BettingRecommendation } from "@/components/BettingRecommendation";
-import { DetailedStats } from "@/components/DetailedStats";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import MatchSelector from "@/components/MatchSelector";
+import MatchPrediction from "@/components/MatchPrediction";
+import ProbabilityChart from "@/components/ProbabilityChart";
+import DetailedStats from "@/components/DetailedStats";
+import BettingRecommendation from "@/components/BettingRecommendation";
+import MatchAnalytics from "@/components/MatchAnalytics";
+import PricingPlans from "@/components/PricingPlans";
+import { supabase } from "@/integrations/supabase/client";
+import { Loader2, Activity, TrendingUp, Target, BarChart3 } from "lucide-react";
+
+interface Team {
+  name: string;
+  position?: number;
+}
+
+interface MatchData {
+  homeTeam: Team;
+  awayTeam: Team;
+  league: string;
+  predictions: {
+    homeWin: number;
+    draw: number;
+    awayWin: number;
+  };
+  detailedStats: any;
+  bettingRecommendations: any;
+  analytics: any;
+}
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("dashboard");
-  const [selectedMatch, setSelectedMatch] = useState<{league: string, homeTeam: string, awayTeam: string} | null>(null);
-  const [analysis, setAnalysis] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [matchData, setMatchData] = useState<MatchData | null>(null);
 
-  // Mock data for demonstration
-  const matchData = {
-    homeTeam: selectedMatch?.homeTeam || "Flamengo",
-    awayTeam: selectedMatch?.awayTeam || "Palmeiras",
-    homeWinProb: analysis?.recommendation?.homeWinProb || 48,
-    drawProb: analysis?.recommendation?.drawProb || 28,
-    awayWinProb: analysis?.recommendation?.awayWinProb || 24,
-    confidence: analysis?.recommendation?.confidence || 82,
-    homePosition: analysis?.homeTeam?.position,
-    awayPosition: analysis?.awayTeam?.position
-  };
-
-  const recommendations = [
-    {
-      type: analysis?.recommendation?.winner ? `${analysis.recommendation.winner} vence` : "Ambos marcam (SIM)",
-      confidence: analysis?.recommendation?.confidence || 82,
-      reason: analysis?.recommendation?.reasons?.[0] || "Baseado em estatísticas recentes",
-      odds: "1.75"
-    },
-    {
-      type: "Over 2.5 gols",
-      confidence: 78,
-      reason: "Média de gols das equipes indica jogo movimentado",
-      odds: "1.65"
-    },
-    {
-      type: `${selectedMatch?.homeTeam || "Flamengo"} vence 1º tempo`,
-      confidence: 65,
-      reason: "Vantagem do mandante no início da partida",
-      odds: "2.10"
+  const handleAnalyzeMatch = async (homeTeam: string, awayTeam: string, league: string) => {
+    if (!homeTeam || !awayTeam) {
+      toast({
+        title: "Erro",
+        description: "Por favor, selecione ambos os times",
+        variant: "destructive",
+      });
+      return;
     }
-  ];
 
-  const handleAnalyze = async (league: string, homeTeam: string, awayTeam: string) => {
-    setSelectedMatch({ league, homeTeam, awayTeam });
-    setIsLoading(true);
-    
+    setIsAnalyzing(true);
+    console.log("Iniciando análise:", { homeTeam, awayTeam, league });
+
     try {
-      console.log(`Analisando: ${league} - ${homeTeam} vs ${awayTeam}`);
-      
       const { data, error } = await supabase.functions.invoke('match-analysis', {
-        body: { league, homeTeam, awayTeam }
+        body: { homeTeam, awayTeam, league }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Erro na função:", error);
+        throw error;
+      }
 
-      setAnalysis(data);
-      
+      console.log("Resposta da análise:", data);
+
+      const formattedData: MatchData = {
+        homeTeam: { 
+          name: homeTeam,
+          position: data?.homeTeam?.position 
+        },
+        awayTeam: { 
+          name: awayTeam,
+          position: data?.awayTeam?.position 
+        },
+        league,
+        predictions: data?.predictions || {
+          homeWin: 45,
+          draw: 25,
+          awayWin: 30
+        },
+        detailedStats: data?.detailedStats || {},
+        bettingRecommendations: data?.bettingRecommendations || [],
+        analytics: data?.analytics || {}
+      };
+
+      setMatchData(formattedData);
+
       toast({
-        title: "Análise Concluída!",
-        description: `${data.recommendation.winner} tem ${data.recommendation.confidence}% de chance de vitória`,
+        title: "Análise concluída!",
+        description: "Os dados da partida foram analisados com sucesso.",
       });
 
     } catch (error) {
-      console.error('Erro na análise:', error);
+      console.error("Erro ao analisar partida:", error);
       toast({
-        title: "Erro na Análise",
+        title: "Erro na análise",
         description: "Não foi possível analisar a partida. Tente novamente.",
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsAnalyzing(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Activity className="h-8 w-8 text-primary" />
-            <h1 className="text-2xl font-bold text-foreground">
-              FuturoLogia <span className="text-primary">IA</span>
+      {/* Header mobile-friendly */}
+      <div className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border">
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          <div className="text-center">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-2">
+              FuturoLogia IA
             </h1>
+            <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto">
+              Análise Inteligente de Futebol com IA
+            </p>
           </div>
-          
-          <nav className="flex items-center space-x-6">
-            <Button 
-              variant={activeTab === "dashboard" ? "default" : "ghost"}
-              onClick={() => setActiveTab("dashboard")}
-            >
-              Dashboard
-            </Button>
-            <Button 
-              variant={activeTab === "analytics" ? "default" : "ghost"}
-              onClick={() => setActiveTab("analytics")}
-            >
-              Análises
-            </Button>
-            <Button 
-              variant={activeTab === "pricing" ? "default" : "ghost"}
-              onClick={() => setActiveTab("pricing")}
-            >
-              Planos
-            </Button>
-            <Button variant="outline" className="text-primary border-primary hover:bg-primary hover:text-primary-foreground">
-              <Crown className="h-4 w-4 mr-2" />
-              Assinar Premium
-            </Button>
-          </nav>
         </div>
-      </header>
+      </div>
 
-      <main className="container mx-auto px-4 py-8">
-        {activeTab === "dashboard" && (
-          <div className="space-y-8">
-            {/* Hero Section */}
-            <section className="text-center space-y-4">
-              <h2 className="text-4xl font-bold text-foreground">
-                Análise Estatística Avançada de Futebol
-              </h2>
-              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Utilize inteligência artificial para tomar decisões mais assertivas em suas apostas esportivas
-              </p>
-            </section>
-
-            {/* Betting Recommendation - TOP OF PAGE */}
-            {analysis && (
-              <section>
-                <BettingRecommendation recommendation={analysis.recommendation} />
-              </section>
+      <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Match Selection - Mobile optimized */}
+        <Card className="w-full">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <Activity className="h-5 w-5 text-primary" />
+              Seleção de Partida
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <MatchSelector onAnalyze={handleAnalyzeMatch} />
+            {isAnalyzing && (
+              <div className="flex items-center justify-center py-8">
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-muted-foreground text-center">
+                    Analisando dados dos times...
+                  </p>
+                </div>
+              </div>
             )}
+          </CardContent>
+        </Card>
 
-            {/* Match Selector */}
-            <section className="grid lg:grid-cols-3 gap-8">
-              <MatchSelector onAnalyze={handleAnalyze} />
-
-              {/* Match Analysis Section */}
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Target className="h-5 w-5 text-primary" />
-                    <span>Análise do Jogo</span>
+        {/* Results Section - Mobile responsive grid */}
+        {matchData && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Left Column */}
+            <div className="space-y-6">
+              {/* Match Prediction */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <TrendingUp className="h-5 w-5 text-primary" />
+                    Previsão da Partida
                   </CardTitle>
-                  <CardDescription>
-                    {matchData.homeTeam} vs {matchData.awayTeam}
-                    {selectedMatch && (
-                      <span className="block text-primary text-sm mt-1">
-                        {selectedMatch.league}
-                      </span>
-                    )}
-                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {isLoading ? (
-                    <div className="flex items-center justify-center h-64">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <span className="ml-2 text-muted-foreground">Analisando...</span>
-                    </div>
-                  ) : (
-                    <ProbabilityChart data={matchData} />
-                  )}
+                  <MatchPrediction 
+                    homeTeam={matchData.homeTeam.name}
+                    awayTeam={matchData.awayTeam.name}
+                    predictions={matchData.predictions}
+                  />
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <TrendingUp className="h-5 w-5 text-primary" />
-                    <span>Recomendações IA</span>
+              {/* Probability Chart */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <BarChart3 className="h-5 w-5 text-primary" />
+                    Gráfico de Probabilidades
                   </CardTitle>
-                  <CardDescription>
-                    Sugestões baseadas em análise estatística avançada
-                  </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {recommendations.map((rec, index) => (
-                    <div key={index} className="p-4 rounded-lg bg-secondary/50 border border-border">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-foreground">{rec.type}</h4>
-                        <Badge variant="outline" className="text-primary border-primary">
-                          {rec.confidence}% confiança
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">{rec.reason}</p>
-                      <div className="flex items-center justify-between">
-                        <Progress value={rec.confidence} className="flex-1 mr-4" />
-                        <span className="text-sm font-mono text-primary">Odd: {rec.odds}</span>
-                      </div>
-                    </div>
-                  ))}
+                <CardContent>
+                  <ProbabilityChart 
+                    homeTeam={matchData.homeTeam.name}
+                    awayTeam={matchData.awayTeam.name}
+                    homePosition={matchData.homeTeam.position}
+                    awayPosition={matchData.awayTeam.position}
+                    predictions={matchData.predictions}
+                  />
                 </CardContent>
               </Card>
-            </section>
+            </div>
 
-            {/* Detailed Statistics */}
-            {analysis && (
-              <section>
-                <DetailedStats 
-                  homeTeam={analysis.homeTeam}
-                  awayTeam={analysis.awayTeam}
-                  headToHead={analysis.headToHead}
-                />
-              </section>
-            )}
-
-            {/* Stats Cards */}
-            <section className="grid md:grid-cols-3 gap-6">
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-full bg-primary/20">
-                      <TrendingUp className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Taxa de Acerto</p>
-                      <p className="text-2xl font-bold text-primary">85.2%</p>
-                    </div>
-                  </div>
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Detailed Stats */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Activity className="h-5 w-5 text-primary" />
+                    Estatísticas Detalhadas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <DetailedStats stats={matchData.detailedStats} />
                 </CardContent>
               </Card>
 
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-full bg-primary/20">
-                      <Users className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Usuários Ativos</p>
-                      <p className="text-2xl font-bold text-foreground">12.5K+</p>
-                    </div>
-                  </div>
+              {/* Betting Recommendations */}
+              <Card>
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Target className="h-5 w-5 text-primary" />
+                    Recomendações de Apostas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <BettingRecommendation recommendations={matchData.bettingRecommendations} />
                 </CardContent>
               </Card>
-
-              <Card className="bg-card/80 backdrop-blur-sm border-border">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="p-3 rounded-full bg-primary/20">
-                      <Activity className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Análises Hoje</p>
-                      <p className="text-2xl font-bold text-foreground">247</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </section>
-
-            <section className="text-center bg-card/50 backdrop-blur-sm rounded-lg p-8 border border-border">
-              <h3 className="text-2xl font-bold text-foreground mb-4">
-                Pronto para começar?
-              </h3>
-              <p className="text-muted-foreground mb-6">
-                Junte-se a milhares de apostadores que já aumentaram sua taxa de acerto
-              </p>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                Começar Teste Grátis
-              </Button>
-            </section>
+            </div>
           </div>
         )}
 
-        {activeTab === "analytics" && <MatchAnalytics />}
-        {activeTab === "pricing" && <PricingPlans />}
-      </main>
+        {/* Analytics Section - Full width on mobile */}
+        {matchData && (
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Análises Avançadas
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MatchAnalytics analytics={matchData.analytics} />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Pricing Plans */}
+        <PricingPlans />
+      </div>
     </div>
   );
 };

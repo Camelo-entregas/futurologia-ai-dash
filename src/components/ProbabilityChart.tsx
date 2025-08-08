@@ -1,112 +1,134 @@
 
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { Badge } from "@/components/ui/badge";
+import { Home, Plane, Trophy } from 'lucide-react';
 
 interface ProbabilityChartProps {
-  data: {
-    homeTeam: string;
-    awayTeam: string;
-    homeWinProb: number;
-    drawProb: number;
-    awayWinProb: number;
-    confidence: number;
-    homePosition?: number;
-    awayPosition?: number;
+  homeTeam: string;
+  awayTeam: string;
+  homePosition?: number;
+  awayPosition?: number;
+  predictions: {
+    homeWin: number;
+    draw: number;
+    awayWin: number;
   };
 }
 
-export function ProbabilityChart({ data }: ProbabilityChartProps) {
-  const chartData = [
-    { name: `${data.homeTeam} (Casa)`, value: data.homeWinProb, color: 'hsl(var(--chart-1))' },
-    { name: 'Empate', value: data.drawProb, color: 'hsl(var(--chart-3))' },
-    { name: `${data.awayTeam} (Fora)`, value: data.awayWinProb, color: 'hsl(var(--chart-2))' }
+const ProbabilityChart = ({ homeTeam, awayTeam, homePosition, awayPosition, predictions }: ProbabilityChartProps) => {
+  const data = [
+    { name: `${homeTeam} (Casa)`, value: predictions.homeWin, color: '#00ff41' },
+    { name: 'Empate', value: predictions.draw, color: '#ffff00' },
+    { name: `${awayTeam} (Fora)`, value: predictions.awayWin, color: '#ff4444' }
   ];
 
-  const COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-3))', 'hsl(var(--chart-2))'];
+  const RADIAN = Math.PI / 180;
+  const renderCustomizedLabel = ({
+    cx, cy, midAngle, innerRadius, outerRadius, percent
+  }: any) => {
+    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+    const x = cx + radius * Math.cos(-midAngle * RADIAN);
+    const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border border-border rounded-lg p-2 shadow-lg">
-          <p className="text-sm font-medium">{payload[0].name}</p>
-          <p className="text-sm text-primary">{`${payload[0].value}%`}</p>
-        </div>
-      );
-    }
-    return null;
+    return (
+      <text 
+        x={x} 
+        y={y} 
+        fill="white" 
+        textAnchor={x > cx ? 'start' : 'end'} 
+        dominantBaseline="central"
+        className="text-xs sm:text-sm font-bold"
+      >
+        {`${(percent * 100).toFixed(0)}%`}
+      </text>
+    );
   };
 
   return (
-    <div className="space-y-6">
-      {/* Posições dos Times */}
-      {(data.homePosition || data.awayPosition) && (
-        <div className="flex items-center justify-between p-4 bg-secondary/30 rounded-lg border border-border">
-          <div className="text-center flex-1">
-            <p className="text-sm text-muted-foreground">{data.homeTeam}</p>
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <Badge variant="outline" className="text-chart-1 border-chart-1">
-                🏠 Casa
-              </Badge>
-              {data.homePosition && (
-                <Badge variant="secondary" className="font-bold">
-                  {data.homePosition}º lugar
-                </Badge>
-              )}
-            </div>
-          </div>
-          
-          <div className="px-4">
-            <span className="text-2xl">VS</span>
-          </div>
-          
-          <div className="text-center flex-1">
-            <p className="text-sm text-muted-foreground">{data.awayTeam}</p>
-            <div className="flex items-center justify-center gap-2 mt-1">
-              <Badge variant="outline" className="text-chart-2 border-chart-2">
-                ✈️ Fora
-              </Badge>
-              {data.awayPosition && (
-                <Badge variant="secondary" className="font-bold">
-                  {data.awayPosition}º lugar
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Gráfico de Probabilidades */}
-      <div className="space-y-4">
-        <div className="text-center">
-          <h3 className="text-lg font-semibold text-foreground">Probabilidades de Resultado</h3>
-          <p className="text-sm text-muted-foreground">Confiança: {data.confidence}%</p>
+    <div className="w-full space-y-4">
+      {/* Team positions header - Mobile optimized */}
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4 p-4 bg-primary/5 rounded-lg">
+        <div className="flex items-center gap-2 text-center sm:text-left">
+          <Home className="h-4 w-4 text-primary" />
+          <span className="font-medium text-sm sm:text-base">{homeTeam}</span>
+          <Badge variant="secondary" className="text-xs">Casa</Badge>
+          {homePosition && (
+            <Badge variant="outline" className="text-xs">
+              <Trophy className="h-3 w-3 mr-1" />
+              {homePosition}º
+            </Badge>
+          )}
         </div>
         
-        <ResponsiveContainer width="100%" height={300}>
+        <div className="hidden sm:block text-muted-foreground font-bold">VS</div>
+        
+        <div className="flex items-center gap-2 text-center sm:text-right">
+          {awayPosition && (
+            <Badge variant="outline" className="text-xs">
+              <Trophy className="h-3 w-3 mr-1" />
+              {awayPosition}º
+            </Badge>
+          )}
+          <Badge variant="secondary" className="text-xs">Fora</Badge>
+          <span className="font-medium text-sm sm:text-base">{awayTeam}</span>
+          <Plane className="h-4 w-4 text-primary" />
+        </div>
+      </div>
+
+      {/* Chart container - Responsive */}
+      <div className="w-full">
+        <ResponsiveContainer width="100%" height={300} minHeight={250}>
           <PieChart>
             <Pie
-              data={chartData}
+              data={data}
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={({ name, value }) => `${value}%`}
+              label={renderCustomizedLabel}
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
             >
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
-            <Tooltip content={<CustomTooltip />} />
+            <Tooltip 
+              formatter={(value) => [`${value}%`, 'Probabilidade']}
+              contentStyle={{
+                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                border: '1px solid #333',
+                borderRadius: '8px',
+                fontSize: '12px'
+              }}
+            />
             <Legend 
-              verticalAlign="bottom" 
-              height={36}
-              formatter={(value) => <span className="text-sm text-foreground">{value}</span>}
+              wrapperStyle={{
+                paddingTop: '20px',
+                fontSize: '12px'
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
       </div>
+
+      {/* Mobile-friendly prediction summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4">
+        <div className="text-center p-3 bg-green-500/10 rounded-lg">
+          <div className="text-lg sm:text-xl font-bold text-green-400">{predictions.homeWin}%</div>
+          <div className="text-xs sm:text-sm text-muted-foreground">Vitória Casa</div>
+        </div>
+        <div className="text-center p-3 bg-yellow-500/10 rounded-lg">
+          <div className="text-lg sm:text-xl font-bold text-yellow-400">{predictions.draw}%</div>
+          <div className="text-xs sm:text-sm text-muted-foreground">Empate</div>
+        </div>
+        <div className="text-center p-3 bg-red-500/10 rounded-lg">
+          <div className="text-lg sm:text-xl font-bold text-red-400">{predictions.awayWin}%</div>
+          <div className="text-xs sm:text-sm text-muted-foreground">Vitória Fora</div>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default ProbabilityChart;
